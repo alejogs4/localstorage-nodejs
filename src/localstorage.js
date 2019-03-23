@@ -7,7 +7,7 @@ const writeFile = promisify(fs.writeFile)
 const readFile = promisify(fs.readFile)
 
 /**
- * 
+ * function that represent whole functions to manipulate localstorages
  */
 module.exports = function setupLocalStorage(path) {
   /**
