@@ -53,15 +53,16 @@ module.exports = function setupLocalStorage(path) {
     }
   }
   /**
-   * 
+   * Given one key returns that item from localstorage, undefined if doesn't exists
    * @param {String} key 
    */
   async function getItem(key) {
     try {
       const data = await readLocalstorageFile()
       if (data && !data[key]) {
-        throw new Error(`The key ${key} doesn't exists in localstorage`)
+        return undefined
       }
+
       return data[key]
     }
     catch (error) {
@@ -83,6 +84,7 @@ module.exports = function setupLocalStorage(path) {
       if (!data[key]) {
         throw new Error(`The file doesn't have the key ${key}`)
       }
+
       const newData = {...data}
       delete newData[key]
       await writeFile(path, JSON.stringify(newData), 'utf8')
@@ -92,6 +94,9 @@ module.exports = function setupLocalStorage(path) {
     }
   }
 
+  /**
+   * Clear whole file of the localstorage
+   */
   async function removeAll() {
     try {
       await writeFile(path, JSON.stringify({}), 'utf8')
