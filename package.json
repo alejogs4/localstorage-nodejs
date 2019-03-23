@@ -1,0 +1,28 @@
+{
+  "name": "localstorage-nodejs",
+  "version": "1.0.0",
+  "description": "Library to emulate the browser localstorge but in a nodejs enviroment",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alejogs4/localstorage-nodejs.git"
+  },
+  "keywords": [
+    "nodejs",
+    "localstorge",
+    "filesystem",
+    "browser",
+    "javascript",
+    "storage",
+    "data"
+  ],
+  "author": "Alejandro García Serna <alejogs4@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alejogs4/localstorage-nodejs/issues"
+  },
+  "homepage": "https://github.com/alejogs4/localstorage-nodejs#readme"
+}
