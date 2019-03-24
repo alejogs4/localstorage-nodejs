@@ -21,89 +21,80 @@ module.exports = function setupLocalStorage(path) {
       fs.writeFileSync(path, JSON.stringify({}), 'utf8')
     }
   })()
+
+  /**
+   * Function to manage any error in library execution
+   * TODO: If you know a better way to manage error in async/await functions, feel free to send pull request
+   * @param {Function} promise 
+   * @param  {...any} args 
+   */
+  async function handleError(promise, ...args) {
+    return new Promise((resolve) => {
+      promise(...args)
+        .then((result) => resolve({ result, error: undefined }))
+        .catch((error) => {
+          console.log(error.message)
+          resolve({ error, result: undefined })
+        })
+    })
+  }
+
   /**
    * Read the exist localstorage file and return the present data
    */
   async function readLocalstorageFile() {
-    try {
-      const file = await readFile(path, { encoding: 'utf8' })
-      return JSON.parse(file)
-    }
-    catch (error) {
-      console.log(error)
-      return null
-    }
+    const { result, error } = await handleError(readFile, path, { encoding: 'utf8' })
+    if (error) return null
+    return JSON.parse(result)
   }
+
   /**
    * Given a key and one value, save this value in the localstorage file
    * @param {String} key 
    * @param {String | Number | Boolean | Object | Array} value 
    */
   async function setItem(key, value) {
-    try {
-      const data = await readLocalstorageFile()
-      if (data) {
-        const newData = {...data}
-        newData[key] = value
-        await writeFile(path, JSON.stringify(newData), 'utf8')
-      }
-    }
-    catch (error) {
-      console.log(error)
+    const { result, error } = await handleError(readLocalstorageFile)
+    if (error) return null
+    
+    if (result) {
+      const newData = {...result}
+      newData[key] = value
+      await handleError(writeFile, path, JSON.stringify(newData), 'utf8')
     }
   }
+
   /**
    * Given one key returns that item from localstorage, undefined if doesn't exists
    * @param {String} key 
    */
   async function getItem(key) {
-    try {
-      const data = await readLocalstorageFile()
-      if (data && !data[key]) {
-        return undefined
-      }
+    const { result, error } = await handleError(readLocalstorageFile)
 
-      return data[key]
-    }
-    catch (error) {
-      console.log(error)
-    }
+    if (error || (result && !result[key])) return undefined
+    
+    return result[key]
   }
+
   /**
    * Given a key remove that item from localstorage file
    * @param {String} key 
    */
   async function removeItem(key) {
-    try {
-      const data = await readLocalstorageFile()
+    const { result, error } = await handleError(readLocalstorageFile)
+    
+    if (error || !result || !result[key]) return
 
-      if (!data) {
-        throw new Error('Error reading file')
-      }
-
-      if (!data[key]) {
-        throw new Error(`The file doesn't have the key ${key}`)
-      }
-
-      const newData = {...data}
-      delete newData[key]
-      await writeFile(path, JSON.stringify(newData), 'utf8')
-    }
-    catch (error) {
-      console.log(error)
-    }
+    const newData = {...result}
+    delete newData[key]
+    await handleError(writeFile, path, JSON.stringify(newData), 'utf8')
   }
 
   /**
    * Clear whole file of the localstorage
    */
   async function removeAll() {
-    try {
-      await writeFile(path, JSON.stringify({}), 'utf8')
-    }
-    catch(error) {
-      console.log(error)
-    }
+    await handleError(writeFile, path, JSON.stringify({}), 'utf8')
   }
 
   return {
