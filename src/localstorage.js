@@ -1,11 +1,11 @@
 const fs = require('fs')
 const { promisify } = require('util')
+const EventEmitter = require('events').EventEmitter
 /**
  * Convert standalone fs callbacks functions in promises
  */
 const writeFile = promisify(fs.writeFile)
 const readFile = promisify(fs.readFile)
-
 /**
  * function that represent whole functions to manipulate localstorages
  */
@@ -17,10 +17,18 @@ module.exports = function setupLocalStorage(path) {
     try {
       fs.accessSync(path, fs.constants.F_OK)
     }
-    catch(error) {
+    catch (error) {
       fs.writeFileSync(path, JSON.stringify({}), 'utf8')
     }
   })()
+
+  const localstorageEvents = new EventEmitter()
+  /**
+ * Events to listen in library execution
+ */
+  const LOCALSTORAGE_SET = 'LOCALSTORAGE_SET'
+  const LOCALSTORAGE_REMOVE = 'LOCALSTORAGE_REMOVE'
+  const LOCALSTORAGE_CLEAR = 'LOCALSTORAGE_CLEAR'
 
   /**
    * Function to manage any error in library execution
@@ -56,11 +64,13 @@ module.exports = function setupLocalStorage(path) {
   async function setItem(key, value) {
     const { result, error } = await handleError(readLocalstorageFile)
     if (error) return null
-    
+
     if (result) {
-      const newData = {...result}
+      const newData = { ...result }
       newData[key] = value
+
       await handleError(writeFile, path, JSON.stringify(newData), 'utf8')
+      localstorageEvents.emit(LOCALSTORAGE_SET, value)
     }
   }
 
@@ -72,7 +82,7 @@ module.exports = function setupLocalStorage(path) {
     const { result, error } = await handleError(readLocalstorageFile)
 
     if (error || (result && !result[key])) return undefined
-    
+
     return result[key]
   }
 
@@ -82,12 +92,14 @@ module.exports = function setupLocalStorage(path) {
    */
   async function removeItem(key) {
     const { result, error } = await handleError(readLocalstorageFile)
-    
+
     if (error || !result || !result[key]) return
 
-    const newData = {...result}
+    const newData = { ...result }
     delete newData[key]
+
     await handleError(writeFile, path, JSON.stringify(newData), 'utf8')
+    localstorageEvents.emit(LOCALSTORAGE_REMOVE, result[key])
   }
 
   /**
@@ -95,6 +107,7 @@ module.exports = function setupLocalStorage(path) {
    */
   async function removeAll() {
     await handleError(writeFile, path, JSON.stringify({}), 'utf8')
+    localstorageEvents.emit(LOCALSTORAGE_CLEAR, null)
   }
 
   return {
@@ -102,5 +115,11 @@ module.exports = function setupLocalStorage(path) {
     getItem,
     removeItem,
     removeAll,
+    LOCALSTORAGE_SET,
+    LOCALSTORAGE_REMOVE,
+    LOCALSTORAGE_CLEAR,
+    on: function(event, listener) {
+      return localstorageEvents.on(event, listener)
+    }
   }
 }
