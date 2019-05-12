@@ -11,7 +11,7 @@ const readFile = promisify(fs.readFile)
  */
 module.exports = function setupLocalStorage(path) {
   /**
-   * IIFE function to create localstorage if this one don't exist
+   * IIFE to create localstorage if this one don't exist
    */
   (function createLocalStorage() {
     try {
@@ -51,8 +51,7 @@ module.exports = function setupLocalStorage(path) {
    * Read the exist localstorage file and return the present data
    */
   async function readLocalstorageFile() {
-    const { result, error } = await handleError(readFile, path, { encoding: 'utf8' })
-    if (error) return null
+    const result = await readFile(path, { encoding: 'utf8' })
     return JSON.parse(result)
   }
 
@@ -119,6 +118,10 @@ module.exports = function setupLocalStorage(path) {
     LOCALSTORAGE_REMOVE,
     LOCALSTORAGE_CLEAR,
     on: function(event, listener) {
+      if (![LOCALSTORAGE_CLEAR, LOCALSTORAGE_REMOVE, LOCALSTORAGE_SET].includes(event)) {
+        throw new Error('The specified event is not allowed')
+      }
+      
       return localstorageEvents.on(event, listener)
     }
   }
